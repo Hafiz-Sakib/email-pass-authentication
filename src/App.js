@@ -15,6 +15,12 @@ function App() {
     setPassword(event.target.value);
   };
   const handleFormSubmit = (event) => {
+    event.preventDefault();
+    if (
+      !/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/.test(password)
+    ) {
+      return;
+    }
     createUserWithEmailAndPassword(auth, email, password)
       .then((result) => {
         const user = result.user;
@@ -23,7 +29,7 @@ function App() {
       .catch((error) => {
         console.error("error is", error);
       });
-    event.preventDefault();
+    console.log(password);
   };
   return (
     <div className="App">
