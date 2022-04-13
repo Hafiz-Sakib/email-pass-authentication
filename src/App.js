@@ -1,5 +1,12 @@
 import "./App.css";
-import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithEmailLink,
+} from "firebase/auth";
 import app from "./firebase.init";
 import { useState } from "react";
 
@@ -7,6 +14,8 @@ const auth = getAuth(app);
 
 function App() {
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [registered, setRegistered] = useState(false);
   const [password, setPassword] = useState("");
   const handlEmailBlur = (event) => {
     setEmail(event.target.value);
@@ -14,28 +23,68 @@ function App() {
   const handlePassBlur = (event) => {
     setPassword(event.target.value);
   };
+  const handleRegister = (event) => {
+    setRegistered(event.target.checked);
+  };
   const handleFormSubmit = (event) => {
     event.preventDefault();
     if (
       !/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/.test(password)
     ) {
+      setError(
+        "**Password Must Contain Atleast One Number and Special Character**"
+      );
       return;
+    } else {
+      setError("");
     }
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((result) => {
-        const user = result.user;
-        console.log(user);
+    if (registered) {
+      signInWithEmailAndPassword(auth, email, password)
+        .then((result) => {
+          const user = result.user;
+          console.log(user);
+        })
+        .catch((error) => {
+          console.error(error);
+          setError(error.message);
+        });
+    } else {
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((result) => {
+          const user = result.user;
+          console.log(user);
+          setEmail("");
+          setPassword("");
+          verifyEmail();
+        })
+        .catch((error) => {
+          console.error("error is", error);
+          setError(error.message);
+        });
+    }
+    event.preventDefault();
+  };
+  const handlePasswordReset = () => {
+    sendPasswordResetEmail(auth, email)
+      .then(() => {
+        console.log("Password reset email sent!");
       })
       .catch((error) => {
-        console.error("error is", error);
+        console.log(error.message);
+        // ..
       });
-    console.log(password);
   };
+  const verifyEmail = () => {
+    sendEmailVerification(auth.currentUser).then(() => {
+      console.log("email verification sent !!");
+    });
+  };
+
   return (
     <div className="App">
       <div className="flex flex-col w-full max-w-md px-4 ml-16 py-8 bg-white rounded-lg shadow dark:bg-gray-900 sm:px-6 md:px-8 lg:px-10">
         <div className="self-center mb-6 text-xl font-light text-gray-600 sm:text-2xl dark:text-white">
-          Login To Your Account
+          {registered ? "Log in" : "Register"} Your Account
         </div>
         <div className="mt-8">
           <form action="#" autoComplete="off" onSubmit={handleFormSubmit}>
@@ -84,20 +133,35 @@ function App() {
                   placeholder="Your password"
                 />
               </div>
-            </div>
-            <div className="flex items-center mb-6 -mt-4">
-              <div className="flex ml-auto">
-                <a
-                  href="/"
-                  className="inline-flex text-xs font-thin text-gray-500 sm:text-sm dark:text-gray-100 hover:text-gray-700 dark:hover:text-white"
+              <br />
+              <a href="/">
+                <button
+                  type="link"
+                  onClick={handlePasswordReset}
+                  class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2 "
                 >
-                  Forgot Your Password?
-                </a>
-              </div>
+                  Forget Password?
+                </button>
+              </a>
+              <br />
+
+              <label className="flex items-center space-x-3 mb-3">
+                <input
+                  onChange={handleRegister}
+                  type="checkbox"
+                  className="rounded text-pink-500 h-4 w-4"
+                />
+                <span className="text-gray-700 dark:text-white font-normal">
+                  Already Registered?
+                </span>
+              </label>
+              <br />
+              <p className="text-red-600">{error}</p>
             </div>
+            <div className="flex items-center mb-6 -mt-4"></div>
             <div className="flex w-full">
-              <button className="py-2 px-4  bg-purple-600 hover:bg-purple-700 focus:ring-purple-500 focus:ring-offset-purple-200 text-white w-full transition ease-in duration-200 text-center text-base font-semibold shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2  rounded-lg ">
-                Login
+              <button className="py-2 px-4 bg-purple-600 hover:bg-purple-700 focus:ring-purple-500 focus:ring-offset-purple-200 text-white w-full transition ease-in duration-200 text-center text-base font-semibold shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2  rounded-lg ">
+                Register
               </button>
             </div>
           </form>
