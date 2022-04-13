@@ -5,7 +5,7 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
-  signInWithEmailLink,
+  updateProfile,
 } from "firebase/auth";
 import app from "./firebase.init";
 import { useState } from "react";
@@ -14,9 +14,16 @@ const auth = getAuth(app);
 
 function App() {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [registered, setRegistered] = useState(false);
   const [password, setPassword] = useState("");
+
+  const handlNameBlur = (event) => {
+    setName(event.target.value);
+  };
+
   const handlEmailBlur = (event) => {
     setEmail(event.target.value);
   };
@@ -43,6 +50,8 @@ function App() {
         .then((result) => {
           const user = result.user;
           console.log(user);
+          setSuccess("You are A Succesfull man");
+          setError("");
         })
         .catch((error) => {
           console.error(error);
@@ -60,6 +69,8 @@ function App() {
         .catch((error) => {
           console.error("error is", error);
           setError(error.message);
+          setSuccess("");
+          setUserName();
         });
     }
     event.preventDefault();
@@ -72,6 +83,17 @@ function App() {
       .catch((error) => {
         console.log(error.message);
         // ..
+      });
+  };
+  const setUserName = () => {
+    updateProfile(auth.currentUser, {
+      displayName: name,
+    })
+      .then(() => {
+        console.log("updating username");
+      })
+      .catch((error) => {
+        setError(error.message);
       });
   };
   const verifyEmail = () => {
@@ -88,6 +110,19 @@ function App() {
         </div>
         <div className="mt-8">
           <form action="#" autoComplete="off" onSubmit={handleFormSubmit}>
+            {!registered && (
+              <input
+                type="name"
+                onBlur={handlNameBlur}
+                id="sign-in-name"
+                required
+                className=" rounded-r-lg flex-1 appearance-none border border-gray-300 w-full py-2
+                mb-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                placeholder="Your name"
+              />
+            )}
+            <br />
+
             <div className="flex flex-col mb-2">
               <div className="flex relative ">
                 <span className="rounded-l-md inline-flex  items-center px-3 border-t bg-white border-l border-b  border-gray-300 text-gray-500 shadow-sm text-sm">
@@ -138,7 +173,7 @@ function App() {
                 <button
                   type="link"
                   onClick={handlePasswordReset}
-                  class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2 "
+                  className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2 "
                 >
                   Forget Password?
                 </button>
@@ -156,6 +191,7 @@ function App() {
                 </span>
               </label>
               <br />
+              <p className="text-green-600">{success}</p>
               <p className="text-red-600">{error}</p>
             </div>
             <div className="flex items-center mb-6 -mt-4"></div>
